@@ -1,0 +1,19 @@
+{
+    "name": "Solana Dev Environment",
+    "dockerFile": "Dockerfile",
+  
+    "settings": {
+      "terminal.integrated.shell.linux": "/bin/bash"
+    },
+    "extensions": [
+      "esbenp.prettier-vscode",
+      "rust-lang.rust",
+      "be5invis.toml",
+      "dbaeumer.vscode-eslint",
+      "esbenp.prettier-vscode"
+    ],
+  
+    "workspaceMount": "source=${localWorkspaceFolder},target=/home/dev/workspace/${localWorkspaceFolderBasename},type=bind",
+    "workspaceFolder": "/home/dev/workspace/${localWorkspaceFolderBasename}",
+    //"postCreateCommand": "npm install client-ts"
+  }
