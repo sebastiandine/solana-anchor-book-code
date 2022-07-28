@@ -1,5 +1,5 @@
 **/.anchor
 **/.DS_Store
 **/node_modules
-**/targets
+**/target
 **/*.rs.bk
