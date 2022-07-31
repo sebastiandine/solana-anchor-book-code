@@ -16,6 +16,9 @@ USER dev
 RUN sh -c "$(curl -sSfL https://release.solana.com/v1.9.11/install)"
 ENV PATH="/home/dev/.local/share/solana/install/active_release/bin:$PATH"
 
+# enable React Hot Reload in Container
+ENV WATCHPACK_POLLING=true
+
 # install avm and latest anchor version
 RUN cargo install --git https://github.com/project-serum/anchor avm --locked --force
 RUN avm install latest && avm use latest
