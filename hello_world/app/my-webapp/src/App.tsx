@@ -12,8 +12,13 @@ import {
 import { clusterApiUrl } from '@solana/web3.js';
 import React, { FC, ReactNode, useMemo } from 'react';
 
+import * as anchor from '@project-serum/anchor';
+import { HelloWorld } from "./types/hello_world";
+import idl from "./idl/hello_world.json";
+
 require('./App.css');
 require('@solana/wallet-adapter-react-ui/styles.css');
+
 
 const App: FC = () => {
     return (
@@ -39,6 +44,7 @@ const Context: FC<{ children: ReactNode }> = ({ children }) => {
             new SolanaMobileWalletAdapter({
                 appIdentity: { name: 'Solana Create React App Starter App' },
                 authorizationResultCache: createDefaultAuthorizationResultCache(),
+                cluster: network
             }),
             new PhantomWalletAdapter(),
             new GlowWalletAdapter(),
