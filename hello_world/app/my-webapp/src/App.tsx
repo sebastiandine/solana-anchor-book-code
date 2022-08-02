@@ -10,11 +10,15 @@ import {
     TorusWalletAdapter,
 } from '@solana/wallet-adapter-wallets';
 import { clusterApiUrl } from '@solana/web3.js';
-import React, { FC, ReactNode, useMemo } from 'react';
+import React, { FC, ReactNode, useEffect, useMemo } from 'react';
 
 import * as anchor from '@project-serum/anchor';
 import { HelloWorld } from "./types/hello_world";
 import idl from "./idl/hello_world.json";
+
+import {useAnchorWallet, useConnection} from "@solana/wallet-adapter-react";
+import { useState } from 'react';
+import { countReset } from 'console';
 
 require('./App.css');
 require('@solana/wallet-adapter-react-ui/styles.css');
@@ -65,8 +69,59 @@ const Context: FC<{ children: ReactNode }> = ({ children }) => {
 };
 
 const Content: FC = () => {
+
+    const wallet = useAnchorWallet();
+    const connection = useConnection();
+
+    const [program, setProgram] = useState<anchor.Program<HelloWorld>>(null!);
+    const [account, setAccount] = useState<any>(null);
+
+    const getAllAccountsByAuthority = async (
+        accounts: anchor.AccountClient<HelloWorld>,
+        authority: anchor.web3.PublicKey) => {
+        return await accounts.all([
+          {
+            memcmp: {
+              offset: 8,
+              bytes: authority.toBase58()
+            }
+          }
+        ]);
+    }
+
+    useEffect(() => {
+        if(wallet && connection){
+
+            const anchorConnection = new anchor.web3.Connection(
+                connection.connection.rpcEndpoint,
+                connection.connection.commitment
+            );
+
+            const anchorProvider = new anchor.Provider(
+                anchorConnection,
+                wallet,
+                {"preflightCommitment" : connection.connection.commitment}
+            );
+
+            const _program = new anchor.Program<HelloWorld>(
+                JSON.parse(JSON.stringify(idl)), 
+                "6mi3PrgougeFGizsQmkfga5Z6MnRNa5sbnP8yH7261hN",
+                anchorProvider
+            );
+
+            setProgram(_program);
+        }
+    }, [wallet, connection]);
+
     return (
-        <div className="App">
+        <div className="App" style={{color:'white', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+            {wallet && connection 
+                ?   <div style={{margin: '10px'}}>
+                        {account ? `Counter: ${account.data.toString()}` : "No account found."}
+                    </div>
+                :   ""
+            }
+
             <WalletMultiButton />
         </div>
     );
