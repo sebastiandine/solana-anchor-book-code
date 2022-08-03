@@ -18,7 +18,6 @@ import idl from "./idl/hello_world.json";
 
 import {useAnchorWallet, useConnection} from "@solana/wallet-adapter-react";
 import { useState } from 'react';
-import { countReset } from 'console';
 
 require('./App.css');
 require('@solana/wallet-adapter-react-ui/styles.css');
@@ -74,7 +73,9 @@ const Content: FC = () => {
     const connection = useConnection();
 
     const [program, setProgram] = useState<anchor.Program<HelloWorld>>(null!);
-    const [account, setAccount] = useState<any>(null);
+    const [account, setAccount] = useState<{publicKey: anchor.web3.PublicKey, dataset: any}>(null!);
+    const [setValue, setSetValue] = useState<number>(0);
+
 
     const getAllAccountsByAuthority = async (
         accounts: anchor.AccountClient<HelloWorld>,
@@ -93,15 +94,42 @@ const Content: FC = () => {
         const _account = anchor.web3.Keypair.generate();
         await program.methods.initialize()
         .accounts({myAccount: _account.publicKey,
-          authority: wallet!.publicKey, // tbd remove !
+          authority: wallet!.publicKey, 
           systemProgram: anchor.web3.SystemProgram.programId,
         })
-        .signers([_account]) // tbd remove ! -- important, explain why only _account
+        .signers([_account]) 
         .rpc();
-
-        setAccount(await program.account.myAccount.fetch(_account.publicKey));
+        setAccount({publicKey: _account.publicKey, dataset: await program.account.myAccount.fetch(_account.publicKey)});
     };
 
+    const increaseAccountCounter = async () => {
+        await program.methods.increase()
+        .accounts({myAccount: account!.publicKey, authority: wallet!.publicKey})
+        .rpc();
+
+        setAccount({publicKey: account.publicKey, dataset: await program.account.myAccount.fetch(account.publicKey)});
+    } 
+
+    const decreaseAccountCounter = async () => {
+        await program.methods.decrease()
+        .accounts({myAccount: account!.publicKey, authority: wallet!.publicKey})
+        .rpc();
+
+        setAccount({publicKey: account.publicKey, dataset: await program.account.myAccount.fetch(account.publicKey)});
+    } 
+
+    const setAccountCounter = async () => {
+        await program.methods.set(new anchor.BN(setValue))
+        .accounts({myAccount: account!.publicKey, authority: wallet!.publicKey})
+        .rpc();
+
+        setAccount({publicKey: account.publicKey, dataset: await program.account.myAccount.fetch(account.publicKey)});
+    }
+
+    const setNumberValidation = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const _value = event.target.value.replace("-", "").replace(".", "").replace("e", "");
+        setSetValue(Number(_value));
+    }
 
     useEffect(() => {
         if(wallet && connection){
@@ -125,12 +153,11 @@ const Content: FC = () => {
 
             setProgram(_program);
 
-            
             /*** search for existing accounts */
             getAllAccountsByAuthority(_program.account.myAccount, wallet.publicKey)
             .then((result) => {
                 if(result.length > 0){
-                    setAccount(result[0]);
+                    setAccount({publicKey: result[0].publicKey, dataset: result[0].account});
                 }
             });
         }
@@ -141,9 +168,22 @@ const Content: FC = () => {
             {wallet && connection 
                 ?   <div style={{margin: '20px'}}>
                         <div>{account 
-                            ? `Counter: ${account.account.data.toString()}` 
+                            ? `Counter: ${account.dataset.data.toString()}` 
                             : <button onClick={initAccount}>Initialize</button>}
                         </div>
+                        {account
+                        ? <div><button onClick={increaseAccountCounter}>Increase</button></div>  
+                        : ""}
+                        {account && account.dataset.data.gt(new anchor.BN(0))
+                        ? <div><button onClick={decreaseAccountCounter}>Decrease</button></div>  
+                        : ""}
+                        {account
+                        ? <div>
+                            <button onClick={setAccountCounter}>Set</button>
+                            <input type="number" value={setValue} onChange={setNumberValidation}></input>
+                          </div>
+                        : ""}
+ 
                     </div>
                 :   ""
             }
