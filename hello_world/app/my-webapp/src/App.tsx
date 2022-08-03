@@ -89,6 +89,20 @@ const Content: FC = () => {
         ]);
     }
 
+    const initAccount = async () => {
+        const _account = anchor.web3.Keypair.generate();
+        await program.methods.initialize()
+        .accounts({myAccount: _account.publicKey,
+          authority: wallet!.publicKey, // tbd remove !
+          systemProgram: anchor.web3.SystemProgram.programId,
+        })
+        .signers([_account]) // tbd remove ! -- important, explain why only _account
+        .rpc();
+
+        setAccount(await program.account.myAccount.fetch(_account.publicKey));
+    };
+
+
     useEffect(() => {
         if(wallet && connection){
 
@@ -110,18 +124,29 @@ const Content: FC = () => {
             );
 
             setProgram(_program);
+
+            
+            /*** search for existing accounts */
+            getAllAccountsByAuthority(_program.account.myAccount, wallet.publicKey)
+            .then((result) => {
+                if(result.length > 0){
+                    setAccount(result[0]);
+                }
+            });
         }
     }, [wallet, connection]);
 
     return (
         <div className="App" style={{color:'white', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
             {wallet && connection 
-                ?   <div style={{margin: '10px'}}>
-                        {account ? `Counter: ${account.data.toString()}` : "No account found."}
+                ?   <div style={{margin: '20px'}}>
+                        <div>{account 
+                            ? `Counter: ${account.account.data.toString()}` 
+                            : <button onClick={initAccount}>Initialize</button>}
+                        </div>
                     </div>
                 :   ""
             }
-
             <WalletMultiButton />
         </div>
     );
