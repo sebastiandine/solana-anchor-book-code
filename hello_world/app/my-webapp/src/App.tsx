@@ -126,11 +126,6 @@ const Content: FC = () => {
         setAccount({publicKey: account.publicKey, dataset: await program.account.myAccount.fetch(account.publicKey)});
     }
 
-    const setNumberValidation = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const _value = event.target.value.replace("-", "").replace(".", "").replace("e", "");
-        setSetValue(Number(_value));
-    }
-
     useEffect(() => {
         if(wallet && connection){
 
@@ -180,7 +175,7 @@ const Content: FC = () => {
                         {account
                         ? <div>
                             <button onClick={setAccountCounter}>Set</button>
-                            <input type="number" value={setValue} onChange={setNumberValidation}></input>
+                            <input type="number" min={0} value={setValue} onChange={(evt) => setSetValue(Number(evt.target.value))}></input>
                           </div>
                         : ""}
  
