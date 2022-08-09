@@ -13,7 +13,7 @@
         {
           "name": "myAccount",
           "isMut": true,
-          "isSigner": true
+          "isSigner": false
         },
         {
           "name": "systemProgram",
@@ -84,10 +84,6 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "authority",
-            "type": "publicKey"
-          },
-          {
             "name": "data",
             "type": "u64"
           }
@@ -101,8 +97,5 @@
       "name": "BelowZero",
       "msg": "Cannot decrease value 0f 0."
     }
-  ],
-  "metadata": {
-    "address": "6mi3PrgougeFGizsQmkfga5Z6MnRNa5sbnP8yH7261hN"
-  }
+  ]
 }

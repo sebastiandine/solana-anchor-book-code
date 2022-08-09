@@ -13,7 +13,7 @@ export type HelloWorld = {
         {
           "name": "myAccount",
           "isMut": true,
-          "isSigner": true
+          "isSigner": false
         },
         {
           "name": "systemProgram",
@@ -83,10 +83,6 @@ export type HelloWorld = {
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "authority",
-            "type": "publicKey"
-          },
           {
             "name": "data",
             "type": "u64"
@@ -119,7 +115,7 @@ export const IDL: HelloWorld = {
         {
           "name": "myAccount",
           "isMut": true,
-          "isSigner": true
+          "isSigner": false
         },
         {
           "name": "systemProgram",
@@ -189,10 +185,6 @@ export const IDL: HelloWorld = {
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "authority",
-            "type": "publicKey"
-          },
           {
             "name": "data",
             "type": "u64"

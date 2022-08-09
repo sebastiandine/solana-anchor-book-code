@@ -18,6 +18,7 @@ import idl from "./idl/hello_world.json";
 
 import {useAnchorWallet, useConnection} from "@solana/wallet-adapter-react";
 import { useState } from 'react';
+import { utf8 } from '@project-serum/anchor/dist/cjs/utils/bytes';
 
 require('./App.css');
 require('@solana/wallet-adapter-react-ui/styles.css');
@@ -76,30 +77,36 @@ const Content: FC = () => {
     const [account, setAccount] = useState<{publicKey: anchor.web3.PublicKey, dataset: any}>(null!);
     const [setValue, setSetValue] = useState<number>(0);
 
+    const findPDAforAuthority = async (_program?: anchor.Program<HelloWorld>): Promise<anchor.web3.PublicKey> => {
 
-    const getAllAccountsByAuthority = async (
-        accounts: anchor.AccountClient<HelloWorld>,
-        authority: anchor.web3.PublicKey) => {
-        return await accounts.all([
-          {
-            memcmp: {
-              offset: 8,
-              bytes: authority.toBase58()
-            }
-          }
-        ]);
+        const [pda, _bump] = await anchor.web3.PublicKey.findProgramAddress(
+          [utf8.encode('account'), wallet!.publicKey.toBytes()],
+          (typeof(_program) !== 'undefined' ? _program.programId : program.programId) // tbd explain this in documentation
+        );
+        return pda;
+    }
+        
+    const fetchAccount = async (_program?: anchor.Program<HelloWorld>) => { 
+        if(typeof(_program) !== 'undefined'){
+            const pda = await findPDAforAuthority(_program);
+            return await _program.account.myAccount.fetch(pda);
+        }
+        else{
+            const pda = await findPDAforAuthority();
+            return await program.account.myAccount.fetch(pda);
+        }
     }
 
     const initAccount = async () => {
-        const _account = anchor.web3.Keypair.generate();
+        const pda = await findPDAforAuthority();
         await program.methods.initialize()
-        .accounts({myAccount: _account.publicKey,
+        .accounts({myAccount: pda,
           authority: wallet!.publicKey, 
           systemProgram: anchor.web3.SystemProgram.programId,
         })
-        .signers([_account]) 
+        .signers([]) 
         .rpc();
-        setAccount({publicKey: _account.publicKey, dataset: await program.account.myAccount.fetch(_account.publicKey)});
+        setAccount({publicKey: pda, dataset: await program.account.myAccount.fetch(pda)});
     };
 
     const increaseAccountCounter = async () => {
@@ -107,7 +114,7 @@ const Content: FC = () => {
         .accounts({myAccount: account!.publicKey, authority: wallet!.publicKey})
         .rpc();
 
-        setAccount({publicKey: account.publicKey, dataset: await program.account.myAccount.fetch(account.publicKey)});
+        setAccount({publicKey: account.publicKey, dataset: await fetchAccount()});
     } 
 
     const decreaseAccountCounter = async () => {
@@ -115,7 +122,7 @@ const Content: FC = () => {
         .accounts({myAccount: account!.publicKey, authority: wallet!.publicKey})
         .rpc();
 
-        setAccount({publicKey: account.publicKey, dataset: await program.account.myAccount.fetch(account.publicKey)});
+        setAccount({publicKey: account.publicKey, dataset: await fetchAccount()});
     } 
 
     const setAccountCounter = async () => {
@@ -123,7 +130,7 @@ const Content: FC = () => {
         .accounts({myAccount: account!.publicKey, authority: wallet!.publicKey})
         .rpc();
 
-        setAccount({publicKey: account.publicKey, dataset: await program.account.myAccount.fetch(account.publicKey)});
+        setAccount({publicKey: account.publicKey, dataset: await fetchAccount()});
     }
 
     useEffect(() => {
@@ -148,13 +155,17 @@ const Content: FC = () => {
 
             setProgram(_program);
 
-            /*** search for existing accounts */
-            getAllAccountsByAuthority(_program.account.myAccount, wallet.publicKey)
+            /*** search for existing account */
+            fetchAccount(_program)
             .then((result) => {
-                if(result.length > 0){
-                    setAccount({publicKey: result[0].publicKey, dataset: result[0].account});
+                if(result){
+                    findPDAforAuthority(_program)
+                    .then((pda) => {
+                        setAccount({publicKey: pda, dataset: result});
+                    })
                 }
-            });
+            })
+            .catch((reason) => console.log(reason));
         }
     }, [wallet, connection]);
 
