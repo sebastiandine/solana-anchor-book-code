@@ -41,7 +41,7 @@ pub struct Initialize<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
 
-    #[account(init, seeds = [b"account".as_ref(), authority.key().as_ref()], bump, payer = authority, space = 8 + size_of::<MyAccount>())]
+    #[account(init, seeds = [b"account", authority.key().as_ref()], bump, payer = authority, space = 8 + size_of::<MyAccount>())]
     pub my_account: Account<'info, MyAccount>,
 
     pub system_program: Program<'info, System>,
@@ -49,7 +49,7 @@ pub struct Initialize<'info> {
 
 #[derive(Accounts)]
 pub struct Update<'info> {
-    #[account(mut, seeds = [b"account".as_ref(), authority.key().as_ref()], bump)]
+    #[account(mut, seeds = [b"account", authority.key().as_ref()], bump)]
     pub my_account: Account<'info, MyAccount>,
 
     pub authority: Signer<'info>
