@@ -11,7 +11,7 @@ hello_world = "6mi3PrgougeFGizsQmkfga5Z6MnRNa5sbnP8yH7261hN"
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "/home/dev/.config/solana/id.json"
 
 [scripts]

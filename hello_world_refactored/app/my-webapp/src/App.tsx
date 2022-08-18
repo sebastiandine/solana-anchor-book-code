@@ -81,7 +81,7 @@ const Content: FC = () => {
 
         const [pda, _bump] = await anchor.web3.PublicKey.findProgramAddress(
           [utf8.encode('account'), wallet!.publicKey.toBytes()],
-          (typeof(_program) !== 'undefined' ? _program.programId : program.programId) // tbd explain this in documentation
+          (typeof(_program) !== 'undefined' ? _program.programId : program.programId)
         );
         return pda;
     }
