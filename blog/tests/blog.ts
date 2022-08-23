@@ -48,7 +48,7 @@ const findBlogPDAforAuthority = async (programId: anchor.web3.PublicKey, authori
 const findPostPDAForAuthority = async (programId: anchor.web3.PublicKey, authority: anchor.web3.PublicKey, title: string): Promise<anchor.web3.PublicKey> => {
 
   const [pda, _bump] = await anchor.web3.PublicKey.findProgramAddress(
-    [utf8.encode('post'), authority.toBytes(), utf8.encode(title)],
+    [utf8.encode('post'), authority.toBytes(), utf8.encode(title.substring(0,32))],
     programId
   );
 
@@ -60,7 +60,7 @@ const initializeBlog = async (program: Program<Blog>, authority: anchor.web3.Key
 
   const pda = await findBlogPDAforAuthority(program.programId, authority.publicKey);
 
-  await program.methods.initialize()
+  await program.methods.initBlog()
     .accounts({blog: pda,
       authority: authority.publicKey,
       systemProgram: anchor.web3.SystemProgram.programId,
@@ -120,7 +120,7 @@ describe("hello_world", () => {
     let blog = await fetchBlog(program, wallet1.publicKey);
     console.log(blog);
 
-    await createPost(program, wallet1, "title", "hello world");
+    await createPost(program, wallet1, "a".repeat(30), "b".repeat(500));
     await createPost(program, wallet1, "title2", "hello world 2");
 
     blog = await fetchBlog(program, wallet1.publicKey);
@@ -130,8 +130,6 @@ describe("hello_world", () => {
     const post2 = await fetchPost(program, post.previous);
     console.log(post2);
     console.log(post2.timestamp.toString());
-
-    console.log(test);
 
   });
 

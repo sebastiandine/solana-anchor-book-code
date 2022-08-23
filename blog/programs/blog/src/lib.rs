@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
 use std::mem::size_of; // !!! doku
+use substring::Substring; // doku!
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
@@ -7,7 +8,7 @@ declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 pub mod blog {
     use super::*;
 
-    pub fn initialize(_ctx: Context<Initialize>) -> Result<()> {
+    pub fn init_blog(_ctx: Context<Initialize>) -> Result<()> {
         Ok(())
     }
 
@@ -48,7 +49,7 @@ pub struct CreatePost<'info> {
     #[account(mut, seeds = [b"blog", authority.key().as_ref()], bump)]
     pub blog: Account<'info, Blog>,
 
-    #[account(init, seeds = [b"post", authority.key().as_ref(), title.as_ref()], bump, payer = authority, space = 8 + size_of::<Post>() + title.len() + content.len())] 
+    #[account(init, seeds = [b"post", authority.key().as_ref(), title.substring(0,32).as_ref()], bump, payer = authority, space = 8 + size_of::<Post>() + title.len() + content.len())] 
     pub post: Account<'info, Post>,
 
     pub system_program: Program<'info, System>,
