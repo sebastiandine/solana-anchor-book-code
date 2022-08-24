@@ -171,6 +171,31 @@ describe("blog dapp", () => {
     expect(post.timestamp.gte(new anchor.BN(timestamp))).to.be.true;
   });
 
+  it("Title longer than 32 bytes is valid.", async () => {
+
+    const blogPDA = await findBlogPDAforAuthority(program.programId, wallet1.publicKey);
+    const blogBefore = await fetchBlog(program, blogPDA);
+
+    const title = "Èöê".repeat(50); // use special chars that need two bytes, to ensure that byte calculation is working
+    const content = "bla".repeat(100);
+
+    const postPDA = await findPostPDAForBlog(program.programId, blogPDA, title);
+    const timestamp = Math.floor(Date.now() / 1000) - 1;
+    await createPost(program, wallet1, title, content);
+
+    const blogAfter = await fetchBlog(program, blogPDA);
+    expect(blogAfter.authority.equals(wallet1.publicKey)).to.be.true;
+    expect(blogAfter.posts.eq(blogBefore.posts.add(new anchor.BN(1)))).to.be.true;
+    expect(blogAfter.latest.equals(postPDA)).to.be.true;
+
+    const post = await fetchPost(program, postPDA);
+    expect(post.title).to.be.eq(title);
+    expect(post.content).to.be.eq(content);
+    expect(post.previous.equals(blogBefore.latest)).to.be.true;
+    expect(post.blog.equals(blogPDA)).to.be.true;
+    expect(post.timestamp.gte(new anchor.BN(timestamp))).to.be.true;
+  });
+
   it("Only authority can create posts", async () => {
     const blogPDA = await findBlogPDAforAuthority(program.programId, wallet1.publicKey);
     const title = "My third article";

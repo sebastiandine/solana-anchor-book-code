@@ -43,7 +43,7 @@ pub struct Initialize<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(title: String, content: String)] //https://docs.rs/anchor-lang/latest/anchor_lang/derive.Accounts.html
+#[instruction(title: String, content: String)] 
 pub struct CreatePost<'info> {
 
     #[account(mut)]
