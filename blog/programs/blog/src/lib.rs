@@ -8,7 +8,9 @@ declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 pub mod blog {
     use super::*;
 
-    pub fn init_blog(_ctx: Context<Initialize>) -> Result<()> {
+    pub fn init_blog(ctx: Context<Initialize>) -> Result<()> {
+        let blog = &mut ctx.accounts.blog;
+        blog.authority = *ctx.accounts.authority.key;
         Ok(())
     }
 
@@ -17,6 +19,7 @@ pub mod blog {
         let post = &mut ctx.accounts.post;
 
         post.previous = blog.latest;
+        post.blog = blog.key();
         post.title = title;
         post.content = content;
         post.timestamp = Clock::get().unwrap().unix_timestamp;
@@ -46,10 +49,10 @@ pub struct CreatePost<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
 
-    #[account(mut, seeds = [b"blog", authority.key().as_ref()], bump)]
+    #[account(mut, has_one = authority)]
     pub blog: Account<'info, Blog>,
 
-    #[account(init, seeds = [b"post", authority.key().as_ref(), title.substring(0,32).as_ref()], bump, payer = authority, space = 8 + size_of::<Post>() + title.len() + content.len())] 
+    #[account(init, seeds = [b"post", blog.key().as_ref(), title.substring(0,32).as_ref()], bump, payer = authority, space = 8 + size_of::<Post>() + title.len() + content.len())] 
     pub post: Account<'info, Post>,
 
     pub system_program: Program<'info, System>,
@@ -58,6 +61,7 @@ pub struct CreatePost<'info> {
 #[account]
 #[derive(Default)]
 pub struct Blog {
+    authority: Pubkey,
     latest: Pubkey,
     posts: u64
 }
@@ -66,7 +70,8 @@ pub struct Blog {
 #[derive(Default)]
 pub struct Post {
     title: String,
-    content: String, // oder &str
+    content: String,
     timestamp: i64,
+    blog: Pubkey,
     previous: Pubkey   
 }

@@ -2,12 +2,11 @@ import * as anchor from "@project-serum/anchor";
 import { Program } from "@project-serum/anchor";
 import { Blog } from "../target/types/blog";
 
+import { utf8 } from "@project-serum/anchor/dist/cjs/utils/bytes";
 import chai from "chai";
 import { expect } from "chai";
 
 import chaiAsPromised from "chai-as-promised";
-import { utf8 } from "@project-serum/anchor/dist/cjs/utils/bytes";
-import { rpc } from "@project-serum/anchor/dist/cjs/utils";
 chai.use(chaiAsPromised);
 
 
@@ -42,21 +41,19 @@ const findBlogPDAforAuthority = async (programId: anchor.web3.PublicKey, authori
     [utf8.encode('blog'), authority.toBytes()],
     programId
   );
-
   return pda;
 }
-const findPostPDAForAuthority = async (programId: anchor.web3.PublicKey, authority: anchor.web3.PublicKey, title: string): Promise<anchor.web3.PublicKey> => {
+
+const findPostPDAForBlog = async (programId: anchor.web3.PublicKey, blog: anchor.web3.PublicKey, title: string): Promise<anchor.web3.PublicKey> => {
 
   const [pda, _bump] = await anchor.web3.PublicKey.findProgramAddress(
-    [utf8.encode('post'), authority.toBytes(), utf8.encode(title.substring(0,32))],
+    [utf8.encode('post'), blog.toBytes(), utf8.encode(title.substring(0,32))],
     programId
   );
-
   return pda;
 }
 
-
-const initializeBlog = async (program: Program<Blog>, authority: anchor.web3.Keypair): Promise<anchor.web3.PublicKey> => {
+const initBlog = async (program: Program<Blog>, authority: anchor.web3.Keypair): Promise<anchor.web3.PublicKey> => {
 
   const pda = await findBlogPDAforAuthority(program.programId, authority.publicKey);
 
@@ -74,7 +71,7 @@ const initializeBlog = async (program: Program<Blog>, authority: anchor.web3.Key
 const createPost = async (program: Program<Blog>, authority: anchor.web3.Keypair, title: string, content: string): Promise<anchor.web3.PublicKey> => {
 
   const blogPDA = await findBlogPDAforAuthority(program.programId, authority.publicKey);
-  const postPDA = await findPostPDAForAuthority(program.programId, authority.publicKey, title);
+  const postPDA = await findPostPDAForBlog(program.programId, blogPDA, title);
 
   await program.methods.createPost(title, content)
   .accounts({blog: blogPDA, 
@@ -88,8 +85,8 @@ const createPost = async (program: Program<Blog>, authority: anchor.web3.Keypair
   return postPDA;
 }
 
-const fetchBlog = async (program: Program<Blog>, authority: anchor.web3.PublicKey) => { 
-  return await program.account.blog.fetch(await findBlogPDAforAuthority(program.programId, authority));
+const fetchBlog = async (program: Program<Blog>, address: anchor.web3.PublicKey) => { 
+  return await program.account.blog.fetch(address);
 }
 
 const fetchPost = async (program: Program<Blog>, address: anchor.web3.PublicKey) => { 
@@ -97,7 +94,7 @@ const fetchPost = async (program: Program<Blog>, address: anchor.web3.PublicKey)
 }
 
 // test suite
-describe("hello_world", () => {
+describe("blog dapp", () => {
   // Configure the client to use the local cluster.
   anchor.setProvider(anchor.Provider.env());
 
@@ -111,29 +108,92 @@ describe("hello_world", () => {
     wallet1 = await createWallet(connection, 1);
     wallet2 = await createWallet(connection, 1);
 
-    await initializeBlog(program, wallet1);
+    await initBlog(program, wallet1);
   });
 
-  it("Accounts are initialized correctly.", async () => {
+  it("Blog is initialized correctly.", async () => {
 
-    console.log(wallet1.publicKey.toString());
-    let blog = await fetchBlog(program, wallet1.publicKey);
-    console.log(blog);
+    const blogPDA = await findBlogPDAforAuthority(program.programId, wallet1.publicKey);
+    const blog = await fetchBlog(program, blogPDA);
 
-    await createPost(program, wallet1, "a".repeat(30), "b".repeat(500));
-    await createPost(program, wallet1, "title2", "hello world 2");
-
-    blog = await fetchBlog(program, wallet1.publicKey);
-    console.log(blog);
-    const post = await fetchPost(program, blog.latest);
-    console.log(post);
-    const post2 = await fetchPost(program, post.previous);
-    console.log(post2);
-    console.log(post2.timestamp.toString());
-
+    expect(blog.authority.equals(wallet1.publicKey)).to.be.true;
+    expect(blog.posts.eq(new anchor.BN(0))).to.be.true;
+    expect(blog.latest.equals(new anchor.web3.PublicKey(0))).to.be.true;
   });
 
-  // test: post ohne blog
+  it("Initial post is created successfully.", async () => {
 
+    const blogPDA = await findBlogPDAforAuthority(program.programId, wallet1.publicKey);
+    const blogBefore = await fetchBlog(program, blogPDA);
 
+    const title = "My first article";
+    const content = "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.";
+
+    const postPDA = await findPostPDAForBlog(program.programId, blogPDA, title);
+    const timestamp = Math.floor(Date.now() / 1000) - 1; // it appears that the network timestamp is 1 second behind the actual time, thefore we need to substract 1 second when we compare
+    await createPost(program, wallet1, title, content);
+
+    const blogAfter = await fetchBlog(program, blogPDA);
+    expect(blogAfter.authority.equals(wallet1.publicKey)).to.be.true;
+    expect(blogAfter.posts.eq(blogBefore.posts.add(new anchor.BN(1)))).to.be.true;
+    expect(blogAfter.latest.equals(postPDA)).to.be.true;
+
+    const post = await fetchPost(program, postPDA);
+    expect(post.title).to.be.eq(title);
+    expect(post.content).to.be.eq(content);
+    expect(post.previous.equals(new anchor.web3.PublicKey(0))).to.be.true;
+    expect(post.blog.equals(blogPDA)).to.be.true;
+    expect(post.timestamp.gte(new anchor.BN(timestamp))).to.be.true;
+  });
+
+  it("subsequent posts are generated successfully.", async () => {
+
+    const blogPDA = await findBlogPDAforAuthority(program.programId, wallet1.publicKey);
+    const blogBefore = await fetchBlog(program, blogPDA);
+
+    const title = "My second article";
+    const content = "bla".repeat(100);
+
+    const postPDA = await findPostPDAForBlog(program.programId, blogPDA, title);
+    const timestamp = Math.floor(Date.now() / 1000) - 1;
+    await createPost(program, wallet1, title, content);
+
+    const blogAfter = await fetchBlog(program, blogPDA);
+    expect(blogAfter.authority.equals(wallet1.publicKey)).to.be.true;
+    expect(blogAfter.posts.eq(blogBefore.posts.add(new anchor.BN(1)))).to.be.true;
+    expect(blogAfter.latest.equals(postPDA)).to.be.true;
+
+    const post = await fetchPost(program, postPDA);
+    expect(post.title).to.be.eq(title);
+    expect(post.content).to.be.eq(content);
+    expect(post.previous.equals(blogBefore.latest)).to.be.true;
+    expect(post.blog.equals(blogPDA)).to.be.true;
+    expect(post.timestamp.gte(new anchor.BN(timestamp))).to.be.true;
+  });
+
+  it("Only authority can create posts", async () => {
+    const blogPDA = await findBlogPDAforAuthority(program.programId, wallet1.publicKey);
+    const title = "My third article";
+    const content = "bla".repeat(100);
+    const postPDA = await findPostPDAForBlog(program.programId, blogPDA, title);
+    await expect(program.methods.createPost(title, content)
+                  .accounts({blog: blogPDA, 
+                            authority: wallet1.publicKey,
+                            post: postPDA, 
+                            systemProgram: anchor.web3.SystemProgram.programId
+                          })
+                  .signers([wallet2])
+                  .rpc()
+          ).to.be.rejected;
+
+    await expect(program.methods.createPost(title, content)
+                .accounts({blog: blogPDA, 
+                          authority: wallet2.publicKey,
+                          post: postPDA, 
+                          systemProgram: anchor.web3.SystemProgram.programId
+                        })
+                .signers([wallet2])
+                .rpc()
+          ).to.be.rejected;
+  });
 });
