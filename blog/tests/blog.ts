@@ -128,7 +128,6 @@ describe("blog dapp", () => {
 
     const title = "My first article";
     const content = "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.";
-
     const postPDA = await findPostPDAForBlog(program.programId, blogPDA, blogBefore.posts);
     const timestamp = Math.floor(Date.now() / 1000) - 1; // it appears that the network timestamp is 1 second behind the actual time, thefore we need to substract 1 second when we compare
     await createPost(program, wallet1, blogBefore.posts, title, content);
