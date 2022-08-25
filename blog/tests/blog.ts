@@ -44,10 +44,10 @@ const findBlogPDAforAuthority = async (programId: anchor.web3.PublicKey, authori
   return pda;
 }
 
-const findPostPDAForBlog = async (programId: anchor.web3.PublicKey, blog: anchor.web3.PublicKey, title: string): Promise<anchor.web3.PublicKey> => {
+const findPostPDAForBlog = async (programId: anchor.web3.PublicKey, blog: anchor.web3.PublicKey, postCount: anchor.BN): Promise<anchor.web3.PublicKey> => {
 
   const [pda, _bump] = await anchor.web3.PublicKey.findProgramAddress(
-    [utf8.encode('post'), blog.toBytes(), utf8.encode(title.substring(0,32))],
+    [utf8.encode('post'), blog.toBytes(), postCount.toArray("be", 8)],
     programId
   );
   return pda;
@@ -68,10 +68,10 @@ const initBlog = async (program: Program<Blog>, authority: anchor.web3.Keypair):
     return pda;
 }
 
-const createPost = async (program: Program<Blog>, authority: anchor.web3.Keypair, title: string, content: string): Promise<anchor.web3.PublicKey> => {
+const createPost = async (program: Program<Blog>, authority: anchor.web3.Keypair, postCount: anchor.BN, title: string, content: string): Promise<anchor.web3.PublicKey> => {
 
   const blogPDA = await findBlogPDAforAuthority(program.programId, authority.publicKey);
-  const postPDA = await findPostPDAForBlog(program.programId, blogPDA, title);
+  const postPDA = await findPostPDAForBlog(program.programId, blogPDA, postCount);
 
   await program.methods.createPost(title, content)
   .accounts({blog: blogPDA, 
@@ -129,9 +129,9 @@ describe("blog dapp", () => {
     const title = "My first article";
     const content = "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.";
 
-    const postPDA = await findPostPDAForBlog(program.programId, blogPDA, title);
+    const postPDA = await findPostPDAForBlog(program.programId, blogPDA, blogBefore.posts);
     const timestamp = Math.floor(Date.now() / 1000) - 1; // it appears that the network timestamp is 1 second behind the actual time, thefore we need to substract 1 second when we compare
-    await createPost(program, wallet1, title, content);
+    await createPost(program, wallet1, blogBefore.posts, title, content);
 
     const blogAfter = await fetchBlog(program, blogPDA);
     expect(blogAfter.authority.equals(wallet1.publicKey)).to.be.true;
@@ -154,34 +154,9 @@ describe("blog dapp", () => {
     const title = "My second article";
     const content = "bla".repeat(100);
 
-    const postPDA = await findPostPDAForBlog(program.programId, blogPDA, title);
+    const postPDA = await findPostPDAForBlog(program.programId, blogPDA, blogBefore.posts);
     const timestamp = Math.floor(Date.now() / 1000) - 1;
-    await createPost(program, wallet1, title, content);
-
-    const blogAfter = await fetchBlog(program, blogPDA);
-    expect(blogAfter.authority.equals(wallet1.publicKey)).to.be.true;
-    expect(blogAfter.posts.eq(blogBefore.posts.add(new anchor.BN(1)))).to.be.true;
-    expect(blogAfter.latest.equals(postPDA)).to.be.true;
-
-    const post = await fetchPost(program, postPDA);
-    expect(post.title).to.be.eq(title);
-    expect(post.content).to.be.eq(content);
-    expect(post.previous.equals(blogBefore.latest)).to.be.true;
-    expect(post.blog.equals(blogPDA)).to.be.true;
-    expect(post.timestamp.gte(new anchor.BN(timestamp))).to.be.true;
-  });
-
-  it("Title longer than 32 bytes is valid.", async () => {
-
-    const blogPDA = await findBlogPDAforAuthority(program.programId, wallet1.publicKey);
-    const blogBefore = await fetchBlog(program, blogPDA);
-
-    const title = "Èöê".repeat(50); // use special chars that need two bytes, to ensure that byte calculation is working
-    const content = "bla".repeat(100);
-
-    const postPDA = await findPostPDAForBlog(program.programId, blogPDA, title);
-    const timestamp = Math.floor(Date.now() / 1000) - 1;
-    await createPost(program, wallet1, title, content);
+    await createPost(program, wallet1, blogBefore.posts, title, content);
 
     const blogAfter = await fetchBlog(program, blogPDA);
     expect(blogAfter.authority.equals(wallet1.publicKey)).to.be.true;
@@ -198,9 +173,10 @@ describe("blog dapp", () => {
 
   it("Only authority can create posts", async () => {
     const blogPDA = await findBlogPDAforAuthority(program.programId, wallet1.publicKey);
+    const blogBefore = await fetchBlog(program, blogPDA);
     const title = "My third article";
     const content = "bla".repeat(100);
-    const postPDA = await findPostPDAForBlog(program.programId, blogPDA, title);
+    const postPDA = await findPostPDAForBlog(program.programId, blogPDA, blogBefore.posts);
     await expect(program.methods.createPost(title, content)
                   .accounts({blog: blogPDA, 
                             authority: wallet1.publicKey,

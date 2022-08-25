@@ -17,4 +17,3 @@ default = []
 
 [dependencies]
 anchor-lang = "0.25.0"
-substring = "1.4.5"
