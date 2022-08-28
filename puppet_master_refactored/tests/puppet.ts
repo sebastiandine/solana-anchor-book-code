@@ -23,7 +23,7 @@ const findPDAforMaster = async (programId: anchor.web3.PublicKey, authority: anc
   return {pda: pda, bump: bump};
 }
 
-describe('puppet', () => {
+describe('puppet-master', () => {
   const provider = anchor.Provider.env();
   anchor.setProvider(provider);
 
