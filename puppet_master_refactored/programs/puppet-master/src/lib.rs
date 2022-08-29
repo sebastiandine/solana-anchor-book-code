@@ -3,7 +3,7 @@ use std::mem::size_of;
 
 use puppet::cpi::accounts::SetData;
 use puppet::program::Puppet;
-use puppet::{self, Data};
+use puppet::Data;
 
 declare_id!("HmbTLCmaGvZhKnn1Zfa1JVnp7vkMV4DYVxPLWBVoN65L");
 
