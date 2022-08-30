@@ -7,7 +7,7 @@ declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 pub mod puppet {
     use super::*;
     pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
-        ctx.accounts.puppet_account.authority = ctx.accounts.authority_pda.key();
+        ctx.accounts.puppet_account.authority = ctx.accounts.authority.key();
         Ok(())
     }
 
@@ -20,12 +20,12 @@ pub mod puppet {
 
 #[derive(Accounts)]
 pub struct Initialize<'info> {
-    #[account(init, payer = payer, seeds = [b"puppet", authority_pda.key().as_ref()], bump, space = 8 + size_of::<Data>())]
+    #[account(init, payer = payer, seeds = [b"puppet", authority.key().as_ref()], bump, space = 8 + size_of::<Data>())]
     pub puppet_account: Account<'info, Data>,
     #[account(mut)]
     pub payer: Signer<'info>,
-    /// CHECK: this pda will later be able to sign transactions for the new account
-    pub authority_pda: UncheckedAccount<'info>,
+    /// CHECK: this can be a keypair's public key or a pda
+    pub authority: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
 }
 

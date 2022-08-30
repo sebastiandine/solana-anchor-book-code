@@ -50,7 +50,7 @@ describe('puppet-master', () => {
       .initialize()
       .accounts({
         puppetAccount: puppetPDA,
-        authorityPda: masterPDA.pda,
+        authority: masterPDA.pda,
         payer: provider.wallet.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId
 
@@ -76,5 +76,32 @@ describe('puppet-master', () => {
 
     expect((await puppetProgram.account.data
       .fetch(puppetPDA)).data.toNumber()).to.equal(42);
+  });
+
+  it('Keypair as authority is working.', async () => {
+
+    const puppetPDA = await findPDAforPuppet(puppetProgram.programId, provider.wallet.publicKey);
+
+    // create "puppet pda account" with authority "provider.wallet"
+    await puppetProgram.methods
+      .initialize()
+      .accounts({
+        puppetAccount: puppetPDA,
+        authority: provider.wallet.publicKey,
+        payer: provider.wallet.publicKey,
+        systemProgram: anchor.web3.SystemProgram.programId
+      })
+      .rpc();
+    
+    await puppetProgram.methods
+      .setData(new anchor.BN(100))
+      .accounts({
+        puppetAccount: puppetPDA,
+        authority: provider.wallet.publicKey,
+      })
+      .rpc();
+
+    expect((await puppetProgram.account.data
+      .fetch(puppetPDA)).data.toNumber()).to.equal(100);
   });
 });
