@@ -35,16 +35,6 @@ describe('puppet-master', () => {
     const masterPDA = await findPDAforMaster(puppetMasterProgram.programId, provider.wallet.publicKey);
     const puppetPDA = await findPDAforPuppet(puppetProgram.programId, masterPDA.pda);
 
-    // create "puppet master pda account" with authority "provider.wallet"
-    await puppetMasterProgram.methods
-      .initialize()
-      .accounts({
-          masterPdaAccount: masterPDA.pda,
-          authority: provider.wallet.publicKey,
-          systemProgram: anchor.web3.SystemProgram.programId
-      })
-      .rpc();
-
     // create "puppet pda account" with authority "puppet master pda account"
     await puppetProgram.methods
       .initialize()
@@ -68,7 +58,7 @@ describe('puppet-master', () => {
         .accounts({
             puppetProgram: puppetProgram.programId,
             puppetAccount: puppetPDA,
-            masterPdaAccount: masterPDA.pda,
+            masterPda: masterPDA.pda,
             authority: provider.wallet.publicKey,
 
         })
