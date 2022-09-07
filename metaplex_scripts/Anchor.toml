@@ -1,0 +1,15 @@
+[features]
+seeds = false
+[programs.localnet]
+metaplex_scripts = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+
+[registry]
+url = "https://anchor.projectserum.com"
+
+[provider]
+cluster = "devnet"
+wallet = "/home/dev/.config/solana/id.json"
+
+[scripts]
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+add_token_metadata = "yarn run ts-node ./scripts/add_token_metadata.ts"
