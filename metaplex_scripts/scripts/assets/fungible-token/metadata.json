@@ -1,0 +1,6 @@
+{
+    "name": "MyTest Token",
+    "symbol": "TEST",
+    "description": "A test token with metadata.",
+    "image": "https://raw.githubusercontent.com/sebastiandine/solana-anchor-book-code/master/metaplex_scripts/scripts/assets/fungible-token/logo.png"
+}
