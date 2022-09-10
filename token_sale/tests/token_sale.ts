@@ -1,7 +1,7 @@
 import * as anchor from "@project-serum/anchor";
 import { Program } from "@project-serum/anchor";
 import { utf8 } from "@project-serum/anchor/dist/cjs/utils/bytes";
-import {  createMint, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress} from "@solana/spl-token";
+import {  createMint, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress, createSetAuthorityInstruction, AuthorityType, getMint, getAccount} from "@solana/spl-token";
 
 import { TokenSale } from "../target/types/token_sale";
 
@@ -40,36 +40,46 @@ describe("token_sale", () => {
 
   let wallet1: anchor.web3.Keypair;
   let mint: anchor.web3.PublicKey;
+  let mintAuthority: {pda: anchor.web3.PublicKey, bump: number};
 
   before(async () => {
     wallet1 = await createWallet(provider.connection, 10);
 
-    mint = await createMint(provider.connection, wallet1, program.programId, null, 9);
-    //console.log(await getMint(provider.connection, mint));
-    
+    // create mint
+    mint = await createMint(provider.connection, wallet1, wallet1.publicKey, null, 9);
+
+    // derive pda from the sale that should be the mint authority
+    const [pda, bump] = await anchor.web3.PublicKey.findProgramAddress(
+      [utf8.encode("MINT_AUTHORITY"), mint.toBytes()],
+      program.programId
+    );
+    mintAuthority = {pda: pda, bump: bump};
+
+    // change mint authority to pda
+    const tx = new anchor.web3.Transaction()
+      .add(createSetAuthorityInstruction(
+        mint,
+        wallet1.publicKey,
+        AuthorityType.MintTokens,
+        mintAuthority.pda
+      ));
+    await anchor.web3.sendAndConfirmTransaction(provider.connection, tx, [wallet1]);
+
+    console.log("authority", mintAuthority.pda);
+    console.log(await getMint(provider.connection, mint));
 
   });
 
  
   it("Is initialized!", async () => {
-    const before = await provider.connection.getTokenAccountsByOwner(wallet1.publicKey, {programId: TOKEN_PROGRAM_ID});
-    console.log(before);
 
-    const [pda, bump] = await anchor.web3.PublicKey.findProgramAddress(
-      [wallet1.publicKey.toBytes(), TOKEN_PROGRAM_ID.toBytes(), mint.toBytes()],
-      ASSOCIATED_TOKEN_PROGRAM_ID
-    );
-    console.log(pda.toString());
-
-    const pda2 = await getAssociatedTokenAddress(mint, wallet1.publicKey);
-    console.log(pda2.toString());
-    
-
-    await program.methods.purchase(bump)
+    const associatedTokenAccount = await getAssociatedTokenAddress(mint, wallet1.publicKey);
+    await program.methods.purchase(mintAuthority.bump, new anchor.BN("1000000000"))
       .accounts({
         payer: wallet1.publicKey,
-        tokenAccount: pda2,
+        tokenAccount: associatedTokenAccount,
         mint: mint,
+        mintAuthority: mintAuthority.pda,
         tokenProgram: TOKEN_PROGRAM_ID,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         systemProgram: anchor.web3.SystemProgram.programId,
@@ -79,23 +89,10 @@ describe("token_sale", () => {
       .signers([wallet1])
       .rpc();
     
-      const after = await provider.connection.getTokenAccountsByOwner(wallet1.publicKey, {programId: TOKEN_PROGRAM_ID});
-      console.log(after);
+      console.log(await getAccount(provider.connection, associatedTokenAccount));
 
-      await program.methods.purchase(bump)
-      .accounts({
-        payer: wallet1.publicKey,
-        tokenAccount: pda2,
-        mint: mint,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-        systemProgram: anchor.web3.SystemProgram.programId,
-        rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-        
-      })
-      .signers([wallet1])
-      .rpc();
-    
+      const balance = await provider.connection.getBalance(mintAuthority.pda);
+      console.log("balance:", balance);
     
   });
 });
