@@ -12,20 +12,21 @@ pub mod token_sale {
 
     pub fn purchase(ctx: Context<Purchase>, mint_authority_bump: u8, amount: u64) -> Result<()> {
 
-        system_program::transfer(ctx.accounts.get_sol_transfer_ctx(), amount);
+        // transfer payment to mint authority
+        system_program::transfer(ctx.accounts.get_sol_transfer_ctx(), amount)?;
 
+        // check if token account already exisits. if not, generate it
         let token_account: Result<Account<TokenAccount>> = Account::try_from(&ctx.accounts.token_account.to_account_info());
         match token_account {
             Ok(_) => {},
-            Err(_) => {associated_token::create(ctx.accounts.get_create_ata_cpi_ctx());}
+            Err(_) => {associated_token::create(ctx.accounts.get_create_ata_cpi_ctx())?;}
         }
 
+        // mint token in ratio 1:5 based on the amount of SOL payed
         let bump = &[mint_authority_bump];
         let mint_key = ctx.accounts.mint.key();
         let seeds = &[&[b"MINT_AUTHORITY", mint_key.as_ref(), bump][..]];
-        token::mint_to(ctx.accounts.get_mint_ctx().with_signer(seeds), amount);
-
-        Ok(())
+        token::mint_to(ctx.accounts.get_mint_ctx().with_signer(seeds), amount*5)
     }
 }
 
@@ -35,11 +36,11 @@ pub struct Purchase<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    /// CHECK: new token account
+    /// CHECK: associcated token account. This will be generated if it does not exist.
     #[account(mut)]
     pub token_account: UncheckedAccount<'info>,
 
-    /// CHECK: mint authority
+    /// CHECK: mint authority. PDA
     #[account(mut, seeds = [b"MINT_AUTHORITY", mint.key().as_ref()], bump)]  // mut because it receives SOL
     pub mint_authority: UncheckedAccount<'info>,
     #[account(mut)]

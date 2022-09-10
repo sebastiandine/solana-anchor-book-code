@@ -1,7 +1,9 @@
 import * as anchor from "@project-serum/anchor";
 import { Program } from "@project-serum/anchor";
+import { token } from "@project-serum/anchor/dist/cjs/utils";
 import { utf8 } from "@project-serum/anchor/dist/cjs/utils/bytes";
-import {  createMint, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress, createSetAuthorityInstruction, AuthorityType, getMint, getAccount} from "@solana/spl-token";
+import {  createMint, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress, createSetAuthorityInstruction, AuthorityType, getAccount} from "@solana/spl-token";
+import { expect } from "chai";
 
 import { TokenSale } from "../target/types/token_sale";
 
@@ -64,17 +66,17 @@ describe("token_sale", () => {
         mintAuthority.pda
       ));
     await anchor.web3.sendAndConfirmTransaction(provider.connection, tx, [wallet1]);
-
-    console.log("authority", mintAuthority.pda);
-    console.log(await getMint(provider.connection, mint));
-
   });
 
  
-  it("Is initialized!", async () => {
+  it("Purchase Tokens", async () => {
 
     const associatedTokenAccount = await getAssociatedTokenAddress(mint, wallet1.publicKey);
-    await program.methods.purchase(mintAuthority.bump, new anchor.BN("1000000000"))
+
+    const solBalanceBuyerBefore = await provider.connection.getBalance(wallet1.publicKey);
+    const solBalanceSellerBefore = await provider.connection.getBalance(mintAuthority.pda);
+    
+    await program.methods.purchase(mintAuthority.bump, new anchor.BN(anchor.web3.LAMPORTS_PER_SOL))
       .accounts({
         payer: wallet1.publicKey,
         tokenAccount: associatedTokenAccount,
@@ -89,10 +91,13 @@ describe("token_sale", () => {
       .signers([wallet1])
       .rpc();
     
-      console.log(await getAccount(provider.connection, associatedTokenAccount));
+      const solBalanceBuyerAfter = await provider.connection.getBalance(wallet1.publicKey);
+      const solBalanceSellerAfter = await provider.connection.getBalance(mintAuthority.pda);
+      const tokenAccountBuyerAfter = await getAccount(provider.connection, associatedTokenAccount);
 
-      const balance = await provider.connection.getBalance(mintAuthority.pda);
-      console.log("balance:", balance);
+      expect(solBalanceBuyerAfter <= (solBalanceBuyerBefore - anchor.web3.LAMPORTS_PER_SOL)).to.be.true;
+      expect(solBalanceSellerAfter == (solBalanceSellerBefore + anchor.web3.LAMPORTS_PER_SOL)).to.be.true;
+      expect(tokenAccountBuyerAfter.amount == new anchor.BN(anchor.web3.LAMPORTS_PER_SOL * 5)).to.be.true;
     
   });
 });
