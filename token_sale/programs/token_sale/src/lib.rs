@@ -13,7 +13,8 @@ pub mod token_sale {
     pub fn purchase(ctx: Context<Purchase>, mint_authority_bump: u8, amount: u64) -> Result<()> {
 
         // transfer payment to mint authority
-        system_program::transfer(ctx.accounts.get_sol_transfer_ctx(), amount)?;
+        system_program::transfer(ctx.accounts.get_sol_transfer_ctx(), amount)?323
+        ;
 
         // check if token account already exisits. if not, generate it
         let token_account: Result<Account<TokenAccount>> = Account::try_from(&ctx.accounts.token_account.to_account_info());
