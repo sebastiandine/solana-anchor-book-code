@@ -26,18 +26,19 @@ pub mod token_sale {
         let bump = &[mint_authority_bump];
         let mint_key = ctx.accounts.mint.key();
         let seeds = &[&[b"MINT_AUTHORITY", mint_key.as_ref(), bump][..]];
-        token::mint_to(ctx.accounts.get_mint_ctx().with_signer(seeds), amount*5)
+        token::mint_to(ctx.accounts.get_mint_ctx().with_signer(seeds), amount*5)?;
+
+        Ok(())
     }
 }
 
 #[derive(Accounts)]
-#[instruction(mint_authority_bump: u8)] 
 pub struct Purchase<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
     /// CHECK: associcated token account. This will be generated if it does not exist.
-    #[account(mut)]
+    #[account(mut, seeds = [payer.key().as_ref(), token_program.key().as_ref(), mint.key().as_ref()], bump, seeds::program = associated_token_program.key())]
     pub token_account: UncheckedAccount<'info>,
 
     /// CHECK: mint authority. PDA
@@ -48,7 +49,7 @@ pub struct Purchase<'info> {
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
     pub associated_token_program: Program<'info, AssociatedToken>,
-    pub rent: Sysvar<'info, Rent>,  // was ist das?
+    pub rent: Sysvar<'info, Rent>, 
 }
 
 impl<'info> Purchase<'info> {
