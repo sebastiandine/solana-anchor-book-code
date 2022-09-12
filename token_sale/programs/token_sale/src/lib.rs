@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::system_program::{self, Transfer};
 
 use anchor_spl::token::{self, Token, Mint, TokenAccount, MintTo};
-use anchor_spl::associated_token::{self, AssociatedToken, Create};
+use anchor_spl::associated_token::{AssociatedToken};
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
@@ -14,13 +14,6 @@ pub mod token_sale {
 
         // transfer payment to mint authority
         system_program::transfer(ctx.accounts.get_sol_transfer_ctx(), amount)?;
-
-        // check if token account already exisits. if not, generate it
-        let token_account: Result<Account<TokenAccount>> = Account::try_from(&ctx.accounts.token_account.to_account_info());
-        match token_account {
-            Ok(_) => {},
-            Err(_) => {associated_token::create(ctx.accounts.get_create_ata_cpi_ctx())?;}
-        }
 
         // mint token in ratio 1:5 based on the amount of SOL payed
         let bump = &[mint_authority_bump];
@@ -37,9 +30,9 @@ pub struct Purchase<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    /// CHECK: associcated token account. This will be generated if it does not exist.
-    #[account(mut, seeds = [payer.key().as_ref(), token_program.key().as_ref(), mint.key().as_ref()], bump, seeds::program = associated_token_program.key())]
-    pub token_account: UncheckedAccount<'info>,
+    #[account(init_if_needed, payer = payer, associated_token::mint = mint,
+        associated_token::authority = payer)]
+    pub token_account: Account<'info, TokenAccount>,
 
     /// CHECK: mint authority. PDA
     #[account(mut, seeds = [b"MINT_AUTHORITY", mint.key().as_ref()], bump)]  // mut because it receives SOL
@@ -52,29 +45,15 @@ pub struct Purchase<'info> {
     pub rent: Sysvar<'info, Rent>, 
 }
 
+
 impl<'info> Purchase<'info> {
 
     pub fn get_sol_transfer_ctx(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
-    
+
         let cpi_program = self.system_program.to_account_info();
         let cpi_accounts = Transfer {
             from: self.payer.to_account_info(),
             to: self.mint_authority.to_account_info(),
-        };
-        CpiContext::new(cpi_program, cpi_accounts)
-    }
-
-    pub fn get_create_ata_cpi_ctx(&self) -> CpiContext<'_, '_, '_, 'info, Create<'info>> {
-
-        let cpi_program = self.associated_token_program.to_account_info();
-        let cpi_accounts = Create {
-            payer: self.payer.to_account_info(),
-            associated_token: self.token_account.to_account_info(),
-            authority: self.payer.to_account_info(),
-            mint: self.mint.to_account_info(),
-            system_program: self.system_program.to_account_info(),
-            token_program: self.token_program.to_account_info(),
-            rent: self.rent.to_account_info(),
         };
         CpiContext::new(cpi_program, cpi_accounts)
     }

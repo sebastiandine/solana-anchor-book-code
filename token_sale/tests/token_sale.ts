@@ -98,6 +98,33 @@ describe("token_sale", () => {
       expect(solBalanceBuyerAfter <= (solBalanceBuyerBefore - anchor.web3.LAMPORTS_PER_SOL)).to.be.true;
       expect(solBalanceSellerAfter == (solBalanceSellerBefore + anchor.web3.LAMPORTS_PER_SOL)).to.be.true;
       expect(tokenAccountBuyerAfter.amount == new anchor.BN(anchor.web3.LAMPORTS_PER_SOL * 5)).to.be.true;
-    
+  });
+
+  it("Second Purchase does not reinitialize ATA", async () => {
+
+    const associatedTokenAccount = await getAssociatedTokenAddress(mint, wallet1.publicKey);
+    const tokenAccountBuyerBefore = await getAccount(provider.connection, associatedTokenAccount);
+
+    await program.methods.purchase(mintAuthority.bump, new anchor.BN(anchor.web3.LAMPORTS_PER_SOL))
+    .accounts({
+      payer: wallet1.publicKey,
+      tokenAccount: associatedTokenAccount,
+      mint: mint,
+      mintAuthority: mintAuthority.pda,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      systemProgram: anchor.web3.SystemProgram.programId,
+      rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+      
+    })
+    .signers([wallet1])
+    .rpc();
+
+    const tokenAccountBuyerAfter = await getAccount(provider.connection, associatedTokenAccount);
+    expect(tokenAccountBuyerBefore.amount > new anchor.BN(0)).to.be.true;
+    expect(tokenAccountBuyerAfter.amount == (new anchor.BN(tokenAccountBuyerBefore.amount).add(new anchor.BN(anchor.web3.LAMPORTS_PER_SOL * 5)))).to.be.true;
+
+
+
   });
 });
