@@ -35,16 +35,15 @@ pub struct Purchase<'info> {
     pub token_account: Account<'info, TokenAccount>,
 
     /// CHECK: mint authority. PDA
-    #[account(mut, seeds = [b"MINT_AUTHORITY", mint.key().as_ref()], bump)]  // mut because it receives SOL
+    #[account(mut, seeds = [b"MINT_AUTHORITY", mint.key().as_ref()], bump)]
     pub mint_authority: UncheckedAccount<'info>,
     #[account(mut)]
-    pub mint: Account<'info, Mint>, // mut because supply gets adjusted
+    pub mint: Account<'info, Mint>,
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub rent: Sysvar<'info, Rent>, 
 }
-
 
 impl<'info> Purchase<'info> {
 

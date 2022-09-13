@@ -1,12 +1,14 @@
 import * as anchor from "@project-serum/anchor";
 import { Program } from "@project-serum/anchor";
-import { token } from "@project-serum/anchor/dist/cjs/utils";
 import { utf8 } from "@project-serum/anchor/dist/cjs/utils/bytes";
 import {  createMint, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress, createSetAuthorityInstruction, AuthorityType, getAccount} from "@solana/spl-token";
-import { expect } from "chai";
 
 import { TokenSale } from "../target/types/token_sale";
 
+import chai from "chai";
+import { expect } from "chai";
+import chaiAsPromised from "chai-as-promised";
+chai.use(chaiAsPromised);
 
 // helper functions
 const createWallet = async (connection: anchor.web3.Connection, funds: number) 
@@ -123,8 +125,51 @@ describe("token_sale", () => {
     const tokenAccountBuyerAfter = await getAccount(provider.connection, associatedTokenAccount);
     expect(tokenAccountBuyerBefore.amount > new anchor.BN(0)).to.be.true;
     expect(tokenAccountBuyerAfter.amount == (new anchor.BN(tokenAccountBuyerBefore.amount).add(new anchor.BN(anchor.web3.LAMPORTS_PER_SOL * 5)))).to.be.true;
+  });
 
+  it("Purchase cannot exceed SOL balance", async () => {
 
+    const associatedTokenAccount = await getAssociatedTokenAddress(mint, wallet1.publicKey);
+    const solBalanceBuyer = await provider.connection.getBalance(wallet1.publicKey);
 
+    await expect(program.methods.purchase(mintAuthority.bump, new anchor.BN(solBalanceBuyer + 1))
+      .accounts({
+        payer: wallet1.publicKey,
+        tokenAccount: associatedTokenAccount,
+        mint: mint,
+        mintAuthority: mintAuthority.pda,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        systemProgram: anchor.web3.SystemProgram.programId,
+        rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+      })
+      .signers([wallet1])
+      .rpc())
+    .to.be.rejected;
+  });
+
+  it("No other PDA has mint authority", async () => {
+
+    const associatedTokenAccount = await getAssociatedTokenAddress(mint, wallet1.publicKey);
+    
+    const [pda, bump] = await anchor.web3.PublicKey.findProgramAddress(
+      [utf8.encode("MINT_AUTHORITY_FAKE"), mint.toBytes()],
+      program.programId
+    );
+
+    await expect(program.methods.purchase(bump, new anchor.BN(1))
+      .accounts({
+        payer: wallet1.publicKey,
+        tokenAccount: associatedTokenAccount,
+        mint: mint,
+        mintAuthority: pda,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        systemProgram: anchor.web3.SystemProgram.programId,
+        rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+      })
+      .signers([wallet1])
+      .rpc())
+    .to.be.rejected;
   });
 });
