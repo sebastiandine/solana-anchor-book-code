@@ -5,3 +5,4 @@
 **/*.rs.bk
 **/build
 **/yarn-error.log
+**/test-ledger
