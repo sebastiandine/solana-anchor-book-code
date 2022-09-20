@@ -1,0 +1,16 @@
+{
+    "name": "Shape #3",
+    "symbol": "SHPS",
+    "description": "A collection of shapes.",
+    "image": "https://github.com/sebastiandine/temp-testing/raw/main/nft-collection/square_red.png",
+    "external_url": "https://shapes-collection.com",
+    "attributes": [
+        {
+            "trait_type": "shape",
+            "value": "square"
+        },
+        {   "trait_type": "color",
+            "value": "red"
+        }
+    ]
+}

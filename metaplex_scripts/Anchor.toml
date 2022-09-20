@@ -13,3 +13,5 @@ wallet = "/home/dev/.config/solana/id.json"
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
 add_token_metadata = "yarn run ts-node ./scripts/add_token_metadata.ts"
+create_nft_collection = "yarn run ts-node ./scripts/create_nft_collection.ts"
+print_edition = "yarn run ts-node ./scripts/print_edition.ts"

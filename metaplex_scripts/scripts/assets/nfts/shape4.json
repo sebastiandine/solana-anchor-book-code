@@ -1,0 +1,16 @@
+{
+    "name": "Shape #4",
+    "symbol": "SHPS",
+    "description": "A collection of shapes.",
+    "image": "https://github.com/sebastiandine/temp-testing/raw/main/nft-collection/star_green.png",
+    "external_url": "https://shapes-collection.com",
+    "attributes": [
+        {
+            "trait_type": "shape",
+            "value": "star"
+        },
+        {   "trait_type": "color",
+            "value": "green"
+        }
+    ]
+}
