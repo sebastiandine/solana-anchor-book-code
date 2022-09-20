@@ -1,0 +1,15 @@
+{
+    "name": "Happy Star",
+    "symbol": "STR",
+    "description": "A real star on the NFT sky.",
+    "image": "https://github.com/sebastiandine/temp-testing/raw/main/nft-collection/star.png",
+    "attributes": [
+        {
+            "trait_type": "face",
+            "value": "happy"
+        },
+        {   "trait_type": "color",
+            "value": "gold"
+        }
+    ]
+}

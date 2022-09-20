@@ -10,10 +10,10 @@ const printEdition = async () => {
 
 
   const nft = await metaplex.nfts().create({
-    name: `Shape #1`,
-    symbol: "SHPS",
-    uri: "https://raw.githubusercontent.com/sebastiandine/temp-testing/main/nft-collection/nft1.json",
-    sellerFeeBasisPoints: 0,
+    name: "Happy Star",
+    symbol: "STR",
+    uri: "https://raw.githubusercontent.com/sebastiandine/temp-testing/main/star.json",
+    sellerFeeBasisPoints: 500,
     maxSupply: new anchor.BN(100)
 
   }).run();
