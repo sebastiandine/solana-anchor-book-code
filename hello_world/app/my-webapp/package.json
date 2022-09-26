@@ -18,6 +18,7 @@
         "tsconfig.json"
     ],
     "dependencies": {
+        "@project-serum/anchor": "^0.25.0",
         "@solana-mobile/wallet-adapter-mobile": "^0.0.1-alpha.0",
         "@solana/wallet-adapter-base": "^0.9.9",
         "@solana/wallet-adapter-react": "^0.15.8",

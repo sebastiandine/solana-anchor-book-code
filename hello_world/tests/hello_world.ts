@@ -64,7 +64,7 @@ const getAllAccountsByAuthority = async (accounts: anchor.AccountClient<HelloWor
 // test suite
 describe("hello_world", () => {
   // Configure the client to use the local cluster.
-  anchor.setProvider(anchor.Provider.env());
+  anchor.setProvider(anchor.AnchorProvider.env());
 
   // shared objects
   const program = anchor.workspace.HelloWorld as Program<HelloWorld>;

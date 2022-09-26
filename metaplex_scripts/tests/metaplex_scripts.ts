@@ -4,7 +4,7 @@ import { MetaplexScripts } from "../target/types/metaplex_scripts";
 
 describe("metaplex_scripts", () => {
   // Configure the client to use the local cluster.
-  anchor.setProvider(anchor.Provider.env());
+  anchor.setProvider(anchor.AnchorProvider.env());
 
   const program = anchor.workspace.MetaplexScripts as Program<MetaplexScripts>;
 

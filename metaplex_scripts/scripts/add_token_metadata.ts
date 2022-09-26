@@ -5,7 +5,7 @@ import { createCreateMetadataAccountV2Instruction, CreateMetadataAccountArgsV2, 
 
 const createFungibleTokenMetadata = async () => {
 
-  const provider = anchor.Provider.env();
+  const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
 
   const mint = new anchor.web3.PublicKey("7bNJ3vodbfZebf58xrhkuPYC3tms7DaU1cTKEjW8D7kr");
@@ -45,7 +45,7 @@ const createFungibleTokenMetadata = async () => {
     accounts, args);
   const transaction = new anchor.web3.Transaction().add(ix);
 
-  return provider.send(transaction);
+  return provider.sendAndConfirm(transaction);
 }
 
 

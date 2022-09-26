@@ -123,7 +123,7 @@ const Content: FC = () => {
                 connection.connection.commitment
             );
 
-            const anchorProvider = new anchor.Provider(
+            const anchorProvider = new anchor.AnchorProvider(
                 anchorConnection,
                 wallet,
                 {"preflightCommitment" : connection.connection.commitment}

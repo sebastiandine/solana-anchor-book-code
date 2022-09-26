@@ -96,7 +96,7 @@ const fetchPost = async (program: Program<Blog>, address: anchor.web3.PublicKey)
 // test suite
 describe("blog dapp", () => {
   // Configure the client to use the local cluster.
-  anchor.setProvider(anchor.Provider.env());
+  anchor.setProvider(anchor.AnchorProvider.env());
 
   // shared objects
   const program = anchor.workspace.Blog as Program<Blog>;

@@ -3,7 +3,7 @@ import { Metaplex, walletAdapterIdentity } from "@metaplex-foundation/js";
 
 const printEdition = async () => {
 
-  const provider = anchor.Provider.env();
+  const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
 
   const metaplex = new Metaplex(provider.connection).use(walletAdapterIdentity(provider.wallet));

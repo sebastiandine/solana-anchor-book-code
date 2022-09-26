@@ -37,7 +37,7 @@ const createWallet = async (connection: anchor.web3.Connection, funds: number)
 
 describe("token_sale", () => {
   // Configure the client to use the local cluster.
-  const provider = anchor.Provider.env();
+  const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
 
   const program = anchor.workspace.TokenSale as Program<TokenSale>;
