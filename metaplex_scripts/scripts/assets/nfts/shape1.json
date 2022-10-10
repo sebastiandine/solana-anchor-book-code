@@ -2,7 +2,7 @@
     "name": "Shape #1",
     "symbol": "SHPS",
     "description": "A collection of shapes.",
-    "image": "https://github.com/sebastiandine/temp-testing/raw/main/nft-collection/circle_red.png",
+    "image": "https://raw.githubusercontent.com/sebastiandine/solana-anchor-book-code/master/metaplex_scripts/scripts/assets/nfts/circle_red.png",
     "external_url": "https://shapes-collection.com",
     "attributes": [
         {

@@ -12,7 +12,7 @@ const printEdition = async () => {
   const nft = await metaplex.nfts().create({
     name: "Happy Star",
     symbol: "STR",
-    uri: "https://raw.githubusercontent.com/sebastiandine/temp-testing/main/star.json",
+    uri: "https://raw.githubusercontent.com/sebastiandine/solana-anchor-book-code/master/metaplex_scripts/scripts/assets/nfts/star.json",
     sellerFeeBasisPoints: 500,
     maxSupply: new anchor.BN(100)
 

@@ -23,7 +23,7 @@ const createNftCollection = async () => {
     const nft = await metaplex.nfts().create({
       name: `Shape #${i+1}`,
       symbol: "SHPS",
-      uri: `https://raw.githubusercontent.com/sebastiandine/temp-testing/main/nft-collection/shape${i+1}.json`,
+      uri: `https://raw.githubusercontent.com/sebastiandine/solana-anchor-book-code/master/metaplex_scripts/scripts/assets/nfts/shape${i+1}.json`,
       sellerFeeBasisPoints: 500,
       collection: collection.mintAddress
     }).run();

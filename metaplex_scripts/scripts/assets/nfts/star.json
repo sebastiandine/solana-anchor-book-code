@@ -2,7 +2,7 @@
     "name": "Happy Star",
     "symbol": "STR",
     "description": "A real star on the NFT sky.",
-    "image": "https://github.com/sebastiandine/temp-testing/raw/main/nft-collection/star.png",
+    "image": "https://raw.githubusercontent.com/sebastiandine/solana-anchor-book-code/master/metaplex_scripts/scripts/assets/nfts/star.png",
     "attributes": [
         {
             "trait_type": "face",
