@@ -1,0 +1,8 @@
+**/.anchor
+**/.DS_Store
+**/node_modules
+**/target
+**/*.rs.bk
+**/build
+**/yarn-error.log
+**/test-ledger

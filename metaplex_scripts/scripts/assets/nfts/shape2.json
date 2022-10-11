@@ -1,0 +1,16 @@
+{
+    "name": "Shape #2",
+    "symbol": "SHPS",
+    "description": "A collection of shapes.",
+    "image": "https://raw.githubusercontent.com/sebastiandine/solana-anchor-book-code/master/metaplex_scripts/scripts/assets/nfts/circle_blue.png",
+    "external_url": "https://shapes-collection.com",
+    "attributes": [
+        {
+            "trait_type": "shape",
+            "value": "circle"
+        },
+        {   "trait_type": "color",
+            "value": "blue"
+        }
+    ]
+}

@@ -1,0 +1,7 @@
+{
+    "name": "Shapes Collection",
+    "symbol": "SHPS",
+    "description": "A collection of shapes.",
+    "image": "https://raw.githubusercontent.com/sebastiandine/solana-anchor-book-code/master/metaplex_scripts/scripts/assets/nfts/collection_logo.png",
+    "external_url": "https://shapes-collection.com"
+}
