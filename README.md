@@ -1,5 +1,5 @@
 # Solana Development with Rust & Anchor
-This repository contains the Anchor project's of the book *Solana Development with Rust & Anchor*. 
+This repository contains the Anchor project's of the book [*Solana Development with Rust & Anchor*](https://www.amazon.de/-/en/dp/B0BHVJQMM4). 
 <br><br>
 
 ## Book Description
